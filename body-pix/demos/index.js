@@ -101,7 +101,7 @@ async function getConstraints(cameraLabel) {
     // on mobile, use the facing mode based on the camera.
     facingMode = isMobile() ? getFacingMode(cameraLabel) : null;
   };
-  return {deviceId, facingMode};
+  return { deviceId, facingMode };
 }
 
 /**
@@ -111,7 +111,7 @@ async function getConstraints(cameraLabel) {
 async function setupCamera(cameraLabel) {
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     throw new Error(
-        'Browser API navigator.mediaDevices.getUserMedia not available');
+      'Browser API navigator.mediaDevices.getUserMedia not available');
   }
 
   const videoElement = document.getElementById('video');
@@ -121,7 +121,7 @@ async function setupCamera(cameraLabel) {
   const videoConstraints = await getConstraints(cameraLabel);
 
   const stream = await navigator.mediaDevices.getUserMedia(
-      {'audio': false, 'video': videoConstraints});
+    { 'audio': false, 'video': videoConstraints });
   videoElement.srcObject = stream;
 
   return new Promise((resolve) => {
@@ -140,7 +140,7 @@ async function loadVideo(cameraLabel) {
   } catch (e) {
     let info = document.getElementById('info');
     info.textContent = 'this browser does not support video capture,' +
-        'or this device does not have a camera';
+      'or this device does not have a camera';
     info.style.display = 'block';
     throw e;
   }
@@ -153,7 +153,7 @@ const guiState = {
   camera: null,
   flipHorizontal: true,
   input:
-      {mobileNetArchitecture: isMobile() ? '0.50' : '0.75', outputStride: 16},
+    { mobileNetArchitecture: isMobile() ? '0.50' : '0.75', outputStride: 16 },
   segmentation: {
     segmentationThreshold: 0.5,
     effect: 'mask',
@@ -173,7 +173,7 @@ const guiState = {
 };
 
 function toCameraOptions(cameras) {
-  const result = {default: null};
+  const result = { default: null };
 
   cameras.forEach(camera => {
     result[camera.label] = camera.label;
@@ -186,16 +186,16 @@ function toCameraOptions(cameras) {
  * Sets up dat.gui controller on the top-right of the window
  */
 function setupGui(cameras) {
-  const gui = new dat.GUI({width: 300});
+  const gui = new dat.GUI({ width: 300 });
 
   gui.add(guiState, 'camera', toCameraOptions(cameras))
-      .onChange(async function(cameraLabel) {
-        state.changingCamera = true;
+    .onChange(async function (cameraLabel) {
+      state.changingCamera = true;
 
-        await loadVideo(cameraLabel);
+      await loadVideo(cameraLabel);
 
-        state.changingCamera = false;
-      });
+      state.changingCamera = false;
+    });
 
   gui.add(guiState, 'flipHorizontal');
 
@@ -203,21 +203,21 @@ function setupGui(cameras) {
   // accuracy. 1.00 is the largest, but will be the slowest. 0.25 is the
   // fastest, but least accurate.
   gui.add(
-         guiState.input, 'mobileNetArchitecture',
-         ['1.00', '0.75', '0.50', '0.25'])
-      .onChange(async function(architecture) {
-        state.changingArchitecture = true;
-        // Important to purge variables and free
-        // up GPU memory
-        state.net.dispose();
+    guiState.input, 'mobileNetArchitecture',
+    ['1.00', '0.75', '0.50', '0.25'])
+    .onChange(async function (architecture) {
+      state.changingArchitecture = true;
+      // Important to purge variables and free
+      // up GPU memory
+      state.net.dispose();
 
-        // Load the PoseNet model weights for
-        // either the 0.50, 0.75, 1.00, or 1.01
-        // version
-        state.net = await bodyPix.load(+architecture);
+      // Load the PoseNet model weights for
+      // either the 0.50, 0.75, 1.00, or 1.01
+      // version
+      state.net = await bodyPix.load(+architecture);
 
-        state.changingArchitecture = false;
-      });
+      state.changingArchitecture = false;
+    });
 
   // Output stride:  Internally, this parameter affects the height and width
   // of the layers in the neural network. The lower the value of the output
@@ -226,12 +226,12 @@ function setupGui(cameras) {
   gui.add(guiState.input, 'outputStride', [8, 16, 32]);
 
   const estimateController =
-      gui.add(guiState, 'estimate', ['segmentation', 'partmap']);
+    gui.add(guiState, 'estimate', ['segmentation', 'partmap']);
 
   let segmentation = gui.addFolder('Segmentation');
   segmentation.add(guiState.segmentation, 'segmentationThreshold', 0.0, 1.0);
   const segmentationEffectController =
-      segmentation.add(guiState.segmentation, 'effect', ['mask', 'bokeh']);
+    segmentation.add(guiState.segmentation, 'effect', ['mask', 'bokeh']);
 
   segmentation.open();
 
@@ -241,7 +241,7 @@ function setupGui(cameras) {
   let maskBlurAmount;
   let maskBackground;
 
-  segmentationEffectController.onChange(function(effectType) {
+  segmentationEffectController.onChange(function (effectType) {
     if (effectType === 'mask') {
       if (bokehBlurAmount) {
         bokehBlurAmount.remove();
@@ -250,13 +250,13 @@ function setupGui(cameras) {
         edgeBlurAmount.remove();
       }
       darknessLevel =
-          segmentation.add(guiState.segmentation, 'opacity', 0.0, 1.0);
+        segmentation.add(guiState.segmentation, 'opacity', 0.0, 1.0);
       maskBlurAmount = segmentation.add(guiState.segmentation, 'maskBlurAmount')
-                           .min(0)
-                           .max(20)
-                           .step(1);
+        .min(0)
+        .max(20)
+        .step(1);
       maskBackground =
-          segmentation.add(guiState.segmentation, 'maskBackground');
+        segmentation.add(guiState.segmentation, 'maskBackground');
     } else if (effectType === 'bokeh') {
       if (darknessLevel) {
         darknessLevel.remove();
@@ -268,17 +268,17 @@ function setupGui(cameras) {
         maskBackground.remove();
       }
       bokehBlurAmount = segmentation
-                            .add(
-                                guiState.segmentation,
-                                'backgroundBlurAmount',
-                                )
-                            .min(1)
-                            .max(20)
-                            .step(1);
+        .add(
+          guiState.segmentation,
+          'backgroundBlurAmount',
+        )
+        .min(1)
+        .max(20)
+        .step(1);
       edgeBlurAmount = segmentation.add(guiState.segmentation, 'edgeBlurAmount')
-                           .min(0)
-                           .max(20)
-                           .step(1);
+        .min(0)
+        .max(20)
+        .step(1);
     }
   });
 
@@ -290,12 +290,12 @@ function setupGui(cameras) {
   partMap.add(guiState.partMap, 'applyPixelation');
   partMap.add(guiState.partMap, 'opacity', 0.0, 1.0);
   partMap.add(guiState.partMap, 'colorScale', Object.keys(partColorScales))
-      .onChange(colorScale => {
-        setShownPartColorScales(colorScale);
-      });
+    .onChange(colorScale => {
+      setShownPartColorScales(colorScale);
+    });
   setShownPartColorScales(guiState.partMap.colorScale);
 
-  estimateController.onChange(function(estimationType) {
+  estimateController.onChange(function (estimationType) {
     if (estimationType === 'segmentation') {
       segmentation.open();
       partMap.close();
@@ -329,7 +329,7 @@ function setShownPartColorScales(colorScale) {
 
     child.innerHTML = `
         <div class='color' style='background-color:rgb(${partColor[0]},${
-        partColor[1]},${partColor[2]})' ></div>
+      partColor[1]},${partColor[2]})' ></div>
         ${partNames[i]}`;
 
     colors.appendChild(child);
@@ -352,7 +352,8 @@ function setupFPS() {
  */
 function segmentBodyInRealTime() {
   const canvas = document.getElementById('output');
-  // since images are being fed from a webcam
+  const ctx = canvas.getContext('2d');
+  // since images are being fed from a webcams
 
   async function bodySegmentationFrame() {
     // if changing the model or the camera, wait a second for it to complete
@@ -374,44 +375,47 @@ function segmentBodyInRealTime() {
     switch (guiState.estimate) {
       case 'segmentation':
         const personSegmentation = await state.net.estimatePersonSegmentation(
-            state.video, outputStride,
-            guiState.segmentation.segmentationThreshold);
+          state.video, outputStride,
+          guiState.segmentation.segmentationThreshold);
 
         switch (guiState.segmentation.effect) {
           case 'mask':
             const mask = bodyPix.toMaskImageData(
-                personSegmentation, guiState.segmentation.maskBackground);
+              personSegmentation, guiState.segmentation.maskBackground);
+
+            //drawMask(personSegmentation);
+
             bodyPix.drawMask(
-                canvas, state.video, mask, guiState.segmentation.opacity,
-                guiState.segmentation.maskBlurAmount, flipHorizontally);
+              canvas, state.video, mask, personSegmentation, guiState.segmentation.opacity,
+              guiState.segmentation.maskBlurAmount, flipHorizontally);
 
             break;
           case 'bokeh':
             bodyPix.drawBokehEffect(
-                canvas, state.video, personSegmentation,
-                +guiState.segmentation.backgroundBlurAmount,
-                guiState.segmentation.edgeBlurAmount, flipHorizontally);
+              canvas, state.video, personSegmentation,
+              +guiState.segmentation.backgroundBlurAmount,
+              guiState.segmentation.edgeBlurAmount, flipHorizontally);
             break;
         }
         break;
       case 'partmap':
         const partSegmentation = await state.net.estimatePartSegmentation(
-            state.video, outputStride, guiState.partMap.segmentationThreshold);
+          state.video, outputStride, guiState.partMap.segmentationThreshold);
 
         const coloredPartImageData = bodyPix.toColoredPartImageData(
-            partSegmentation, partColorScales[guiState.partMap.colorScale]);
+          partSegmentation, partColorScales[guiState.partMap.colorScale]);
 
         const maskBlurAmount = 0;
         if (guiState.partMap.applyPixelation) {
           const pixelCellWidth = 10.0;
 
           bodyPix.drawPixelatedMask(
-              canvas, video, coloredPartImageData, guiState.partMap.opacity,
-              maskBlurAmount, flipHorizontally, pixelCellWidth);
+            canvas, video, coloredPartImageData, guiState.partMap.opacity,
+            maskBlurAmount, flipHorizontally, pixelCellWidth);
         } else {
           bodyPix.drawMask(
-              canvas, video, coloredPartImageData, guiState.opacity,
-              maskBlurAmount, flipHorizontally);
+            canvas, video, coloredPartImageData, guiState.opacity,
+            maskBlurAmount, flipHorizontally);
         }
 
         break;
@@ -424,6 +428,19 @@ function segmentBodyInRealTime() {
 
     requestAnimationFrame(bodySegmentationFrame);
   }
+
+  const drawMask = function (bodySegmentation) {
+    const image_data = ctx.getImageData(0, 0, bodySegmentation.width, bodySegmentation.height);
+
+    for (let i = 0; i < bodySegmentation.data.length; ++i) {
+      if (bodySegmentation.data[i] === 1) {
+        image_data.data[i * 4 + 3] = 255;
+      } else {
+        image_data.data[i * 4 + 3] = 0;
+      }
+    }
+    ctx.putImageData(image_data, 0, 0);
+  };
 
   bodySegmentationFrame();
 }
@@ -450,6 +467,6 @@ export async function bindPage() {
 
 
 navigator.getUserMedia = navigator.getUserMedia ||
-    navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+  navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
 // kick off the demo
 bindPage();

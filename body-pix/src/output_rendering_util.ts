@@ -15,12 +15,12 @@
  * =============================================================================
  */
 
-import {cpuBlur} from './blur';
-import {PartSegmentation, PersonSegmentation} from './types';
+import { cpuBlur } from './blur';
+import { PartSegmentation, PersonSegmentation } from './types';
 
-const offScreenCanvases: {[name: string]: HTMLCanvasElement} = {};
+const offScreenCanvases: { [name: string]: HTMLCanvasElement } = {};
 
-type ImageType = HTMLImageElement|HTMLVideoElement|HTMLCanvasElement;
+type ImageType = HTMLImageElement | HTMLVideoElement | HTMLCanvasElement;
 type HasDimensions = {
   width: number,
   height: number
@@ -31,12 +31,12 @@ function isSafari() {
 }
 
 function assertSameDimensions(
-    {width: widthA, height: heightA}: HasDimensions,
-    {width: widthB, height: heightB}: HasDimensions, nameA: string,
-    nameB: string) {
+  { width: widthA, height: heightA }: HasDimensions,
+  { width: widthB, height: heightB }: HasDimensions, nameA: string,
+  nameB: string) {
   if (widthA !== widthB || heightA !== heightB) {
     throw new Error(`error: dimensions must match. ${nameA} has dimensions ${
-        widthA}x${heightA}, ${nameB} has dimensions ${widthB}x${heightB}`);
+      widthA}x${heightA}, ${nameB} has dimensions ${widthB}x${heightB}`);
   }
 }
 
@@ -47,8 +47,8 @@ function flipCanvasHorizontal(canvas: HTMLCanvasElement) {
 }
 
 function drawWithCompositing(
-    ctx: CanvasRenderingContext2D, image: HTMLCanvasElement|ImageType,
-    compositOperation: string) {
+  ctx: CanvasRenderingContext2D, image: HTMLCanvasElement | ImageType,
+  compositOperation: string) {
   ctx.globalCompositeOperation = compositOperation;
   ctx.drawImage(image, 0, 0);
 }
@@ -66,8 +66,8 @@ function ensureOffscreenCanvasCreated(id: string): HTMLCanvasElement {
 }
 
 function drawAndBlurImageOnCanvas(
-    image: ImageType, blurAmount: number, canvas: HTMLCanvasElement) {
-  const {height, width} = image;
+  image: ImageType, blurAmount: number, canvas: HTMLCanvasElement) {
+  const { height, width } = image;
   const ctx = canvas.getContext('2d');
   canvas.width = width;
   canvas.height = height;
@@ -84,8 +84,8 @@ function drawAndBlurImageOnCanvas(
 }
 
 function drawAndBlurImageOnOffScreenCanvas(
-    image: ImageType, blurAmount: number,
-    offscreenCanvasName: string): HTMLCanvasElement {
+  image: ImageType, blurAmount: number,
+  offscreenCanvasName: string): HTMLCanvasElement {
   const canvas = ensureOffscreenCanvasCreated(offscreenCanvasName);
   if (blurAmount === 0) {
     renderImageToCanvas(image, canvas);
@@ -96,7 +96,7 @@ function drawAndBlurImageOnOffScreenCanvas(
 }
 
 function renderImageToCanvas(image: ImageType, canvas: HTMLCanvasElement) {
-  const {width, height} = image;
+  const { width, height } = image;
   canvas.width = width;
   canvas.height = height;
   const ctx = canvas.getContext('2d');
@@ -115,7 +115,7 @@ function renderImageDataToCanvas(image: ImageData, canvas: HTMLCanvasElement) {
 }
 
 function renderImageDataToOffScreenCanvas(
-    image: ImageData, canvasName: string): HTMLCanvasElement {
+  image: ImageData, canvasName: string): HTMLCanvasElement {
   const canvas = ensureOffscreenCanvasCreated(canvasName);
   renderImageDataToCanvas(image, canvas);
 
@@ -144,8 +144,8 @@ function renderImageDataToOffScreenCanvas(
  * the corresponding binary segmentation value at the pixel from the output.
  */
 export function toMaskImageData(
-    segmentation: PersonSegmentation, maskBackground = true): ImageData {
-  const {width, height, data} = segmentation;
+  segmentation: PersonSegmentation, maskBackground = true): ImageData {
+  const { width, height, data } = segmentation;
   const bytes = new Uint8ClampedArray(width * height * 4);
 
   for (let i = 0; i < height * width; ++i) {
@@ -180,9 +180,9 @@ export function toMaskImageData(
  * where there is no part.
  */
 export function toColoredPartImageData(
-    partSegmentation: PartSegmentation,
-    partColors: Array<[number, number, number]>): ImageData {
-  const {width, height, data} = partSegmentation;
+  partSegmentation: PartSegmentation,
+  partColors: Array<[number, number, number]>): ImageData {
+  const { width, height, data } = partSegmentation;
   const bytes = new Uint8ClampedArray(width * height * 4);
 
   for (let i = 0; i < height * width; ++i) {
@@ -239,18 +239,27 @@ const CANVAS_NAMES = {
  * to false.
  */
 export function drawMask(
-    canvas: HTMLCanvasElement, image: ImageType, maskImage: ImageData,
-    maskOpacity = 0.7, maskBlurAmount = 0, flipHorizontal = false) {
+  canvas: HTMLCanvasElement, image: ImageType, maskImage: ImageData, bodySegmentation: PersonSegmentation,
+  maskOpacity = 0.7, maskBlurAmount = 0, flipHorizontal = false) {
   assertSameDimensions(image, maskImage, 'image', 'mask');
 
   const mask = renderImageDataToOffScreenCanvas(maskImage, CANVAS_NAMES.mask);
   const blurredMask = drawAndBlurImageOnOffScreenCanvas(
-      mask, maskBlurAmount, CANVAS_NAMES.blurredMask);
+    mask, maskBlurAmount, CANVAS_NAMES.blurredMask);
 
   canvas.width = blurredMask.width;
   canvas.height = blurredMask.height;
 
   const ctx = canvas.getContext('2d');
+
+  const image_data = ctx.getImageData(0, 0, bodySegmentation.width, bodySegmentation.height);
+  for (let i = 0; i < bodySegmentation.data.length; ++i) {
+    if (bodySegmentation.data[i] === 1) {
+      image_data.data[i * 4 + 3] = 255;
+    } else {
+      image_data.data[i * 4 + 3] = 0;
+    }
+  }
   ctx.save();
   if (flipHorizontal) {
     flipCanvasHorizontal(canvas);
@@ -259,6 +268,7 @@ export function drawMask(
   ctx.drawImage(image, 0, 0);
   ctx.globalAlpha = maskOpacity;
   ctx.drawImage(blurredMask, 0, 0);
+  ctx.putImageData(image_data, 0, 0);
   ctx.restore();
 }
 
@@ -285,14 +295,14 @@ export function drawMask(
  * @param pixelCellWidth The width of each pixel cell. Default to 10 px.
  */
 export function drawPixelatedMask(
-    canvas: HTMLCanvasElement, image: ImageType, maskImage: ImageData,
-    maskOpacity = 0.7, maskBlurAmount = 0, flipHorizontal = false,
-    pixelCellWidth = 10.0) {
+  canvas: HTMLCanvasElement, image: ImageType, maskImage: ImageData,
+  maskOpacity = 0.7, maskBlurAmount = 0, flipHorizontal = false,
+  pixelCellWidth = 10.0) {
   assertSameDimensions(image, maskImage, 'image', 'mask');
 
   const mask = renderImageDataToOffScreenCanvas(maskImage, CANVAS_NAMES.mask);
   const blurredMask = drawAndBlurImageOnOffScreenCanvas(
-      mask, maskBlurAmount, CANVAS_NAMES.blurredMask);
+    mask, maskBlurAmount, CANVAS_NAMES.blurredMask);
 
   canvas.width = blurredMask.width;
   canvas.height = blurredMask.height;
@@ -304,17 +314,17 @@ export function drawPixelatedMask(
   }
 
   const offscreenCanvas =
-      ensureOffscreenCanvasCreated(CANVAS_NAMES.lowresPartMask);
+    ensureOffscreenCanvasCreated(CANVAS_NAMES.lowresPartMask);
   const offscreenCanvasCtx = offscreenCanvas.getContext('2d');
   offscreenCanvas.width = blurredMask.width * (1.0 / pixelCellWidth);
   offscreenCanvas.height = blurredMask.height * (1.0 / pixelCellWidth);
   offscreenCanvasCtx.drawImage(
-      blurredMask, 0, 0, blurredMask.width, blurredMask.height, 0, 0,
-      offscreenCanvas.width, offscreenCanvas.height);
+    blurredMask, 0, 0, blurredMask.width, blurredMask.height, 0, 0,
+    offscreenCanvas.width, offscreenCanvas.height);
   ctx.imageSmoothingEnabled = false;
   ctx.drawImage(
-      offscreenCanvas, 0, 0, offscreenCanvas.width, offscreenCanvas.height, 0,
-      0, canvas.width, canvas.height);
+    offscreenCanvas, 0, 0, offscreenCanvas.width, offscreenCanvas.height, 0,
+    0, canvas.width, canvas.height);
 
   // Draws vertical grid lines that are `pixelCellWidth` apart from each other.
   for (let i = 0; i < offscreenCanvas.width; i++) {
@@ -341,18 +351,18 @@ export function drawPixelatedMask(
 }
 
 function createPersonMask(
-    segmentation: PersonSegmentation,
-    edgeBlurAmount: number): HTMLCanvasElement {
+  segmentation: PersonSegmentation,
+  edgeBlurAmount: number): HTMLCanvasElement {
   const maskBackground = false;
   const backgroundMaskImage = toMaskImageData(segmentation, maskBackground);
 
   const backgroundMask =
-      renderImageDataToOffScreenCanvas(backgroundMaskImage, CANVAS_NAMES.mask);
+    renderImageDataToOffScreenCanvas(backgroundMaskImage, CANVAS_NAMES.mask);
   if (edgeBlurAmount === 0) {
     return backgroundMask;
   } else {
     return drawAndBlurImageOnOffScreenCanvas(
-        backgroundMask, edgeBlurAmount, CANVAS_NAMES.blurredMask);
+      backgroundMask, edgeBlurAmount, CANVAS_NAMES.blurredMask);
   }
 }
 
@@ -378,13 +388,13 @@ function createPersonMask(
  * to false.
  */
 export function drawBokehEffect(
-    canvas: HTMLCanvasElement, image: ImageType,
-    personSegmentation: PersonSegmentation, backgroundBlurAmount = 3,
-    edgeBlurAmount = 3, flipHorizontal = false) {
+  canvas: HTMLCanvasElement, image: ImageType,
+  personSegmentation: PersonSegmentation, backgroundBlurAmount = 3,
+  edgeBlurAmount = 3, flipHorizontal = false) {
   assertSameDimensions(image, personSegmentation, 'image', 'segmentation');
 
   const blurredImage = drawAndBlurImageOnOffScreenCanvas(
-      image, backgroundBlurAmount, CANVAS_NAMES.blurred);
+    image, backgroundBlurAmount, CANVAS_NAMES.blurred);
 
   const personMask = createPersonMask(personSegmentation, edgeBlurAmount);
 
