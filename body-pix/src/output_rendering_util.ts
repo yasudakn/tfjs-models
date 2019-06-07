@@ -1,3 +1,4 @@
+
 /**
  * @license
  * Copyright 2018 Google LLC. All Rights Reserved.
@@ -251,6 +252,10 @@ export function drawMask(
   canvas.height = blurredMask.height;
 
   const ctx = canvas.getContext('2d');
+  ctx.save();
+  ctx.drawImage(image, 0, 0);
+  ctx.globalAlpha = maskOpacity;
+  ctx.drawImage(blurredMask, 0, 0);
 
   const image_data = ctx.getImageData(0, 0, bodySegmentation.width, bodySegmentation.height);
   for (let i = 0; i < bodySegmentation.data.length; ++i) {
@@ -260,16 +265,13 @@ export function drawMask(
       image_data.data[i * 4 + 3] = 0;
     }
   }
-  ctx.save();
+  
+  ctx.putImageData(image_data, 0, 0);
+  ctx.restore();
+    
   if (flipHorizontal) {
     flipCanvasHorizontal(canvas);
   }
-
-  ctx.drawImage(image, 0, 0);
-  ctx.globalAlpha = maskOpacity;
-  ctx.drawImage(blurredMask, 0, 0);
-  ctx.putImageData(image_data, 0, 0);
-  ctx.restore();
 }
 
 /**

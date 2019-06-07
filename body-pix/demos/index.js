@@ -383,11 +383,11 @@ function segmentBodyInRealTime() {
             const mask = bodyPix.toMaskImageData(
               personSegmentation, guiState.segmentation.maskBackground);
 
-            //drawMask(personSegmentation);
-
             bodyPix.drawMask(
               canvas, state.video, mask, personSegmentation, guiState.segmentation.opacity,
               guiState.segmentation.maskBlurAmount, flipHorizontally);
+
+//            drawMask(personSegmentation);
 
             break;
           case 'bokeh':
