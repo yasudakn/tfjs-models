@@ -265,10 +265,10 @@ export function drawMask(
       image_data.data[i * 4 + 3] = 0;
     }
   }
-  
+
   ctx.putImageData(image_data, 0, 0);
   ctx.restore();
-    
+
   if (flipHorizontal) {
     flipCanvasHorizontal(canvas);
   }

@@ -372,11 +372,12 @@ function segmentBodyInRealTime() {
 
     const flipHorizontally = guiState.flipHorizontal;
 
+    const personSegmentation = await state.net.estimatePersonSegmentation(
+      state.video, outputStride,
+      guiState.segmentation.segmentationThreshold);
+
     switch (guiState.estimate) {
       case 'segmentation':
-        const personSegmentation = await state.net.estimatePersonSegmentation(
-          state.video, outputStride,
-          guiState.segmentation.segmentationThreshold);
 
         switch (guiState.segmentation.effect) {
           case 'mask':
@@ -386,8 +387,6 @@ function segmentBodyInRealTime() {
             bodyPix.drawMask(
               canvas, state.video, mask, personSegmentation, guiState.segmentation.opacity,
               guiState.segmentation.maskBlurAmount, flipHorizontally);
-
-//            drawMask(personSegmentation);
 
             break;
           case 'bokeh':
@@ -414,7 +413,7 @@ function segmentBodyInRealTime() {
             maskBlurAmount, flipHorizontally, pixelCellWidth);
         } else {
           bodyPix.drawMask(
-            canvas, video, coloredPartImageData, guiState.opacity,
+            canvas, video, coloredPartImageData, personSegmentation, guiState.opacity,
             maskBlurAmount, flipHorizontally);
         }
 
@@ -428,19 +427,6 @@ function segmentBodyInRealTime() {
 
     requestAnimationFrame(bodySegmentationFrame);
   }
-
-  const drawMask = function (bodySegmentation) {
-    const image_data = ctx.getImageData(0, 0, bodySegmentation.width, bodySegmentation.height);
-
-    for (let i = 0; i < bodySegmentation.data.length; ++i) {
-      if (bodySegmentation.data[i] === 1) {
-        image_data.data[i * 4 + 3] = 255;
-      } else {
-        image_data.data[i * 4 + 3] = 0;
-      }
-    }
-    ctx.putImageData(image_data, 0, 0);
-  };
 
   bodySegmentationFrame();
 }
