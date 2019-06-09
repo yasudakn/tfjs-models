@@ -31,6 +31,9 @@ const state = {
   changingArchitecture: false
 };
 
+const img = new Image();
+img.src = './planet.jpg'
+
 function isAndroid() {
   return /Android/i.test(navigator.userAgent);
 }
@@ -354,6 +357,9 @@ function segmentBodyInRealTime() {
   const canvas = document.getElementById('output');
   const ctx = canvas.getContext('2d');
   // since images are being fed from a webcams
+  img.onload = () => {
+    ctx.drawImage(img, 0, 0);
+  };
 
   async function bodySegmentationFrame() {
     // if changing the model or the camera, wait a second for it to complete
@@ -385,7 +391,7 @@ function segmentBodyInRealTime() {
               personSegmentation, guiState.segmentation.maskBackground);
 
             bodyPix.drawMask(
-              canvas, state.video, mask, personSegmentation, guiState.segmentation.opacity,
+              canvas, state.video, mask, personSegmentation, img, guiState.segmentation.opacity,
               guiState.segmentation.maskBlurAmount, flipHorizontally);
 
             break;
@@ -413,7 +419,7 @@ function segmentBodyInRealTime() {
             maskBlurAmount, flipHorizontally, pixelCellWidth);
         } else {
           bodyPix.drawMask(
-            canvas, video, coloredPartImageData, personSegmentation, guiState.opacity,
+            canvas, video, coloredPartImageData, personSegmentation, img, guiState.opacity,
             maskBlurAmount, flipHorizontally);
         }
 

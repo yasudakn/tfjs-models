@@ -241,6 +241,7 @@ const CANVAS_NAMES = {
  */
 export function drawMask(
   canvas: HTMLCanvasElement, image: ImageType, maskImage: ImageData, bodySegmentation: PersonSegmentation,
+  img: CanvasImageSource,
   maskOpacity = 0.7, maskBlurAmount = 0, flipHorizontal = false) {
   assertSameDimensions(image, maskImage, 'image', 'mask');
 
@@ -251,22 +252,25 @@ export function drawMask(
   canvas.width = blurredMask.width;
   canvas.height = blurredMask.height;
 
+
   const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0);
+
+  const image_data = ctx.getImageData(0, 0, bodySegmentation.width, bodySegmentation.height);
+  for (let i = 0; i < bodySegmentation.data.length; ++i) {
+    if (bodySegmentation.data[i] === 1) {
+      image_data.data[i * 4 + 3] = 0;
+    } else {
+      image_data.data[i * 4 + 3] = 255;
+    }
+  }
+
+  ctx.putImageData(image_data, 0, 0);
   ctx.save();
   ctx.drawImage(image, 0, 0);
   ctx.globalAlpha = maskOpacity;
   ctx.drawImage(blurredMask, 0, 0);
 
-  const image_data = ctx.getImageData(0, 0, bodySegmentation.width, bodySegmentation.height);
-  for (let i = 0; i < bodySegmentation.data.length; ++i) {
-    if (bodySegmentation.data[i] === 1) {
-      image_data.data[i * 4 + 3] = 255;
-    } else {
-      image_data.data[i * 4 + 3] = 0;
-    }
-  }
-
-  ctx.putImageData(image_data, 0, 0);
   ctx.restore();
 
   if (flipHorizontal) {
