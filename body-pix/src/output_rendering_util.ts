@@ -145,7 +145,7 @@ function renderImageDataToOffScreenCanvas(
  * the corresponding binary segmentation value at the pixel from the output.
  */
 export function toMaskImageData(
-  segmentation: PersonSegmentation, maskBackground = true): ImageData {
+  segmentation: PersonSegmentation, srcData : ImageData, maskBackground = true): ImageData {
   const { width, height, data } = segmentation;
   const bytes = new Uint8ClampedArray(width * height * 4);
 
@@ -155,9 +155,9 @@ export function toMaskImageData(
     const alpha = shouldMask * 255;
 
     const j = i * 4;
-    bytes[j + 0] = 0;
-    bytes[j + 1] = 0;
-    bytes[j + 2] = 0;
+    bytes[j + 0] = srcData[j + 0];
+    bytes[j + 1] = srcData[j + 1];
+    bytes[j + 2] = srcData[j + 2];
     bytes[j + 3] = Math.round(alpha);
   }
 
@@ -241,7 +241,7 @@ const CANVAS_NAMES = {
  */
 export function drawMask(
   canvas: HTMLCanvasElement, image: ImageType, maskImage: ImageData, bodySegmentation: PersonSegmentation,
-  img: CanvasImageSource,
+  bgImg: CanvasImageSource,
   maskOpacity = 0.7, maskBlurAmount = 0, flipHorizontal = false) {
   assertSameDimensions(image, maskImage, 'image', 'mask');
 
@@ -252,9 +252,8 @@ export function drawMask(
   canvas.width = blurredMask.width;
   canvas.height = blurredMask.height;
 
-
   const ctx = canvas.getContext('2d');
-  ctx.drawImage(img, 0, 0);
+  ctx.save();
 
   const image_data = ctx.getImageData(0, 0, bodySegmentation.width, bodySegmentation.height);
   for (let i = 0; i < bodySegmentation.data.length; ++i) {
@@ -266,10 +265,10 @@ export function drawMask(
   }
 
   ctx.putImageData(image_data, 0, 0);
-  ctx.save();
-  ctx.drawImage(image, 0, 0);
+  ctx.drawImage(bgImg, 0, 0);
   ctx.globalAlpha = maskOpacity;
-  ctx.drawImage(blurredMask, 0, 0);
+  //ctx.drawImage(blurredMask, 0, 0);
+  ctx.drawImage(image, 0, 0);
 
   ctx.restore();
 

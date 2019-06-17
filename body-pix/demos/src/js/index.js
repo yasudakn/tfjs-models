@@ -388,7 +388,7 @@ function segmentBodyInRealTime() {
         switch (guiState.segmentation.effect) {
           case 'mask':
             const mask = bodyPix.toMaskImageData(
-              personSegmentation, guiState.segmentation.maskBackground);
+              personSegmentation, img, guiState.segmentation.maskBackground);
 
             bodyPix.drawMask(
               canvas, state.video, mask, personSegmentation, img, guiState.segmentation.opacity,
@@ -448,7 +448,7 @@ export async function bindPage() {
   document.getElementById('main').style.display = 'inline-block';
 
   await loadVideo();
-
+    
   let cameras = await getVideoInputs();
 
   setupFPS();
