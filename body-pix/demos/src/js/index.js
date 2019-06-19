@@ -22,6 +22,8 @@ import * as partColorScales from './part_color_scales';
 
 const stats = new Stats();
 
+var fs = require('fs');
+
 const state = {
   video: null,
   stream: null,
@@ -30,9 +32,6 @@ const state = {
   changingCamera: false,
   changingArchitecture: false
 };
-
-const img = new Image();
-img.src = './planet.jpg'
 
 function isAndroid() {
   return /Android/i.test(navigator.userAgent);
@@ -357,9 +356,6 @@ function segmentBodyInRealTime() {
   const canvas = document.getElementById('output');
   const ctx = canvas.getContext('2d');
   // since images are being fed from a webcams
-  img.onload = () => {
-    ctx.drawImage(img, 0, 0);
-  };
 
   async function bodySegmentationFrame() {
     // if changing the model or the camera, wait a second for it to complete
@@ -382,16 +378,19 @@ function segmentBodyInRealTime() {
       state.video, outputStride,
       guiState.segmentation.segmentationThreshold);
 
+//    const data = fs.readFileSync(__dirname + '/planet2.jpg');
+
     switch (guiState.estimate) {
       case 'segmentation':
 
         switch (guiState.segmentation.effect) {
           case 'mask':
+            
             const mask = bodyPix.toMaskImageData(
-              personSegmentation, img, guiState.segmentation.maskBackground);
+              personSegmentation, guiState.segmentation.maskBackground);
 
             bodyPix.drawMask(
-              canvas, state.video, mask, personSegmentation, img, guiState.segmentation.opacity,
+              canvas, state.video, mask, personSegmentation, guiState.segmentation.opacity,
               guiState.segmentation.maskBlurAmount, flipHorizontally);
 
             break;
@@ -446,6 +445,12 @@ export async function bindPage() {
 
   document.getElementById('loading').style.display = 'none';
   document.getElementById('main').style.display = 'inline-block';
+
+  const canvas = document.getElementById('output');
+  const ctx = canvas.getContext('2d');
+  var bgImg = new Image;
+  bgImg.src = 'planet.jpg';
+  ctx.drawImage(bgImg, 0, 0, bgImg.width, bgImg.height);
 
   await loadVideo();
     
