@@ -146,12 +146,9 @@ function renderImageDataToOffScreenCanvas(
  */
 export function toMaskImageData(
   segmentation: PersonSegmentation, 
-//  srcImageData : Uint8Array, 
   maskBackground = true): ImageData {
   const { width, height, data } = segmentation;
   const bytes = new Uint8ClampedArray(width * height * 4);
-
-//  const srcData = srcImageData;
 
   for (let i = 0; i < height * width; ++i) {
     const shouldMask = maskBackground ? 1 - data[i] : data[i];
@@ -245,7 +242,6 @@ const CANVAS_NAMES = {
  */
 export function drawMask(
   canvas: HTMLCanvasElement, image: ImageType, maskImage: ImageData, bodySegmentation: PersonSegmentation,
-//  bgURL: string,
   maskOpacity = 0.7, maskBlurAmount = 0, flipHorizontal = false) {
   assertSameDimensions(image, maskImage, 'image', 'mask');
 
@@ -259,10 +255,9 @@ export function drawMask(
   const ctx = canvas.getContext('2d');
   ctx.save();
 
-  ctx.globalAlpha = maskOpacity;
-  //ctx.drawImage(blurredMask, 0, 0);
   ctx.drawImage(image, 0, 0);
-
+  ctx.globalAlpha = maskOpacity;
+  ctx.drawImage(blurredMask, 0, 0);
   ctx.restore();
 
   var image_data = ctx.getImageData(0, 0, bodySegmentation.width, bodySegmentation.height);
@@ -402,10 +397,7 @@ export function drawBokehEffect(
   const blurredImage = drawAndBlurImageOnOffScreenCanvas(
     image, backgroundBlurAmount, CANVAS_NAMES.blurred);
 
-//  const { height, width } = image;
   const ctx = canvas.getContext('2d');
-//  const bgImg = ctx.createImageData(height, width);
-//  const bgImg = new Uint8Array(height * width * 4);
   const backgroundMaskImage = toMaskImageData(personSegmentation, false);
   const personMask = createPersonMask(backgroundMaskImage, edgeBlurAmount);
 

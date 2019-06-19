@@ -22,8 +22,6 @@ import * as partColorScales from './part_color_scales';
 
 const stats = new Stats();
 
-var fs = require('fs');
-
 const state = {
   video: null,
   stream: null,
@@ -378,8 +376,6 @@ function segmentBodyInRealTime() {
       state.video, outputStride,
       guiState.segmentation.segmentationThreshold);
 
-//    const data = fs.readFileSync(__dirname + '/planet2.jpg');
-
     switch (guiState.estimate) {
       case 'segmentation':
 
@@ -418,7 +414,7 @@ function segmentBodyInRealTime() {
             maskBlurAmount, flipHorizontally, pixelCellWidth);
         } else {
           bodyPix.drawMask(
-            canvas, video, coloredPartImageData, personSegmentation, img, guiState.opacity,
+            canvas, video, coloredPartImageData, personSegmentation, guiState.opacity,
             maskBlurAmount, flipHorizontally);
         }
 
@@ -446,14 +442,8 @@ export async function bindPage() {
   document.getElementById('loading').style.display = 'none';
   document.getElementById('main').style.display = 'inline-block';
 
-  const canvas = document.getElementById('output');
-  const ctx = canvas.getContext('2d');
-  var bgImg = new Image;
-  bgImg.src = 'planet.jpg';
-  ctx.drawImage(bgImg, 0, 0, bgImg.width, bgImg.height);
-
   await loadVideo();
-    
+  
   let cameras = await getVideoInputs();
 
   setupFPS();
